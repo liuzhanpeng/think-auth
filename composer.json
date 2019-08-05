@@ -7,5 +7,7 @@
             "email": "liuzhanpeng@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+        "topthink/framework": "v5.1.*"
+    }
 }
