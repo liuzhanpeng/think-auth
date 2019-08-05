@@ -9,5 +9,10 @@
     ],
     "require": {
         "topthink/framework": "v5.1.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Lzpeng\\Auth\\": "src/"
+        }
     }
 }
