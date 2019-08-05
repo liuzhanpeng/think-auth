@@ -1,7 +1,7 @@
 <?php
 namespace Lzpeng\Auth;
 
-use Lzpeng\Auht\Contract\Authenticator;
+use Lzpeng\Auth\Contract\Authenticator;
 
 /**
  * 
