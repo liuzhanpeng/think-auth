@@ -11,7 +11,7 @@ use think\Hook;
 /**
  * 基于session的用户认证器
  */
-class SessionAuthenticator implements AbstractAuthenticator
+class SessionAuthenticator extends AbstractAuthenticator
 {
     /**
      * 会话key
