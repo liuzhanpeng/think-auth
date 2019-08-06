@@ -93,10 +93,6 @@ class GenericModelUserProvider implements UserProvider
      */
     public function validateCredentials(UserIdentity $user, array $credentials)
     {
-        if (!isset($credentials[$this->passwordKey])) {
-            return false;
-        }
-
         return $this->hasher->check($credentials[$this->passwordKey], $user->getPassword());
     }
 

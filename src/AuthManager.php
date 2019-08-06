@@ -5,7 +5,7 @@ use Lzpeng\Auth\Contracts\Authenticator;
 use Lzpeng\Auth\Contracts\UserProvider;
 use Lzpeng\Auth\Contracts\PasswordHasherContract;
 use Lzpeng\Auth\Authenticators\SessionAuthenticator;
-use Lzpeng\Auth\Authenticators\TokenAuthenticator;
+use Lzpeng\Auth\Authenticators\ApiTokenAuthenticator;
 use Lzpeng\Auth\UserProviders\GenericModelUserProvider;
 use Lzpeng\Auth\Hashers\DefaultPasswordHasher;
 use think\Config;
@@ -32,7 +32,7 @@ class AuthManager
      */
     private $innerAuthenticators = [
         'session' => SessionAuthenticator::class,
-        'token' => TokenAuthenticator::class,
+        'apiToken' => ApiTokenAuthenticator::class,
     ];
 
     /**
@@ -86,9 +86,10 @@ class AuthManager
         }
         $this->bindUserProvider($config['provider']['driver']);
 
-        // 假如有密码hash配置
         if (isset($config['provider']['hasher'])) {
             $this->bindHasher($config['provider']['hasher']['driver']);
+        } else {
+            $this->bindHasher('default');
         }
     }
 

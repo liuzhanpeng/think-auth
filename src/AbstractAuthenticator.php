@@ -4,11 +4,10 @@ namespace Lzpeng\Auth;
 use Lzpeng\Auth\Contracts\Authenticator;
 use Lzpeng\Auth\Contracts\UserProvider;
 use Lzpeng\Auth\Contracts\UserIdentity;
-use Lzpeng\Auth\Exceptions\InvalidCredentialsException;
 use think\Hook;
 
 /**
- * 认证器抽象类
+ * 抽象认证类
  * 
  * @author 刘展鹏 <liuzhanpeng@gmail.com>
  */
@@ -20,19 +19,14 @@ abstract class AbstractAuthenticator implements Authenticator
     const EVENT_LOGIN_BEFORE = 'login_before';
 
     /**
-     * 登录后事件名称 
+     * 登录成功事件名称 
      */
-    const EVENT_LOGIN_AFTER = 'login_after';
+    const EVENT_LOGIN_SUCCESS = 'login_success';
 
     /**
-     * 登出前事件名称
+     * 登录失败事件名称 
      */
-    const EVENT_LOGOUT_BEFORE = 'logout_before';
-
-    /**
-     * 登出后事件名称
-     */
-    const EVENT_LOGOUT_AFTER = 'logout_after';
+    const EVENT_LOGIN_FAILED = 'login_failed';
 
     /**
      * 认证用户对象
@@ -49,8 +43,8 @@ abstract class AbstractAuthenticator implements Authenticator
     protected $provider;
 
     /**
-     * 钩子
-     *
+     * thinkphp的钩子对象
+     * 
      * @var think\Hook
      */
     protected $hook;
@@ -58,6 +52,7 @@ abstract class AbstractAuthenticator implements Authenticator
     /**
      * 构造函数
      *
+     * @param UserProvider $provider 认证用户提供器
      * @param think\Hook $hook 钩子
      * @return void
      */
@@ -75,18 +70,35 @@ abstract class AbstractAuthenticator implements Authenticator
         $this->hook->listen(self::EVENT_LOGIN_BEFORE, $credentials);
 
         $user = $this->provider->findByCredentials($credentials);
-        if (is_null($user) || !$this->provider->validateCredentials($user, $credentials)) {
-            throw new InvalidCredentialsException('无效用户凭证');
+        if (!is_null($user) && $this->validate($user, $credentials)) {
+            $this->forceLogin($user);
+
+            $this->hook->listen(self::EVENT_LOGIN_SUCCESS, [
+                'credentials' => $credentials,
+                'user' => $user,
+            ]);
+            return true;
         }
 
-        $this->forceLogin($user);
-
-        $this->hook->listen(self::EVENT_LOGIN_AFTER, $user);
+        $this->hook->listen(self::EVENT_LOGIN_FAILED, $credentials);
+        return false;
     }
 
     /**
-     * 登录逻辑
-     * 
+     * 验证逻辑
+     *
+     * @param UserIdentity $user 认证用户对象
+     * @param array $credentials 用户凭证
+     * @return bool
+     */
+    protected function validate(UserIdentity $user, array $credentials)
+    {
+        return false;
+    }
+
+    /**
+     * 保存认证对象逻辑
+     *
      * @param UserIdentity $user 认证用户对象
      * @return void
      */
@@ -102,26 +114,4 @@ abstract class AbstractAuthenticator implements Authenticator
     {
         return !is_null($this->getUser());
     }
-
-    /**
-     * 获取认证用户提供器
-     *
-     * @return UserProvider
-     */
-    public function getProvider()
-    {
-        return $this->provider;
-    }
-
-    /**
-     * 设置认证用户提供器
-     *
-     * @param UserProvider $provider 认证用户提供器
-     * @return void
-     */
-    public function setProvider(UserProvider $provider)
-    {
-        $this->provider = $provider;
-    }
-
 }
