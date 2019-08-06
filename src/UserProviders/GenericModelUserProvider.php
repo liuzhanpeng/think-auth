@@ -2,24 +2,29 @@
 namespace Lzpeng\Auth\UserProviders;
 
 use Lzpeng\Auth\Contracts\UserProvider;
+use Lzpeng\Auth\Contracts\UserIdentity;
+use Lzpeng\Auth\Contracts\PasswordHasherContract;
 use think\Model;
 
 /**
  * 基于think\Model的用户提供器
+ * 处理普通的账号和密码认证逻辑
+ * 
+ * @author 刘展鹏 <liuzhanpeng@gmail.com>
  */
-class ModelUserProvider implements UserProvider
+class GenericModelUserProvider implements UserProvider
 {
     /**
-     * 模型对象
+     * 模型标识
      * 
-     * @var think\Model
+     * @var string
      */
     private $model;
 
     /**
      * hasher 
      * 
-     * @var HasherContract
+     * @var PasswordHasherContract
      */
     private $hasher;
 
@@ -40,29 +45,28 @@ class ModelUserProvider implements UserProvider
     /**
      * 构造函数
      * 
-     * @param think\Model $model 模型对象
-     * @param HasherContract $hasher 密码hash处理器
+     * @param string $model 模型标识
      * @param string $idKey 模型id属性名称
      * @param string $passwordKey 用户凭证数组里的密码key
+     * @param PasswordHasherContract $hasher 密码hash处理器
      */
     public function __construct(
-        Model $model, 
-        HasherContract $hasher, 
-        string $idKey = 'id',
-        string $passwordKey = 'password')
+        string $model, 
+        PasswordHasherContract $hasher,
+        array $options = [])
     {
         $this->model = $model;
         $this->hasher = $hasher;
-        $this->idKey = $idKey;
-        $this->passwordKey = $passwordKey;
+        $this->idKey = $options['idKey'] ?? 'id';
+        $this->passwordKey = $options['passwordKey'] ?? 'password';
     }
 
     /**
      * @inheritDoc
      */
-    public function findId($id)
+    public function findById($id)
     {
-        return $this->model->buildQuery()->where($this->idKey, $id)->find();
+        return $this->createModel()->where($this->idKey, $id)->find();
     }
 
     /**
@@ -70,7 +74,7 @@ class ModelUserProvider implements UserProvider
      */
     public function findByCredentials(array $credentials)
     {
-        $query = $this->model->buildQuery();
+        $query = $this->createModel();
 
         // 循环设置查询条件
         foreach ($credentials as $key => $val) {
@@ -89,10 +93,20 @@ class ModelUserProvider implements UserProvider
      */
     public function validateCredentials(UserIdentity $user, array $credentials)
     {
-        if (!in_array($credentials[$this->passwordKey])) {
+        if (!isset($credentials[$this->passwordKey])) {
             return false;
         }
 
-        return $this->hasher->check($user->getPassword(), $credentials[$this->passwordKey]);
+        return $this->hasher->check($credentials[$this->passwordKey], $user->getPassword());
+    }
+
+    /**
+     * 创建模型实例
+     */
+    private function createModel()
+    {
+        $class = '\\'.ltrim($this->model, '\\');
+
+        return new $class;
     }
 }
