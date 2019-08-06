@@ -6,7 +6,6 @@ use Lzpeng\Auth\Contracts\UserProvider;
 use Lzpeng\Auth\Contracts\UserIdentity;
 use Lzpeng\Auth\AbstractAuthenticator;
 use think\Session;
-use think\Hook;
 
 /**
  * 基于session的用户认证器
@@ -34,14 +33,28 @@ class SessionAuthenticator extends AbstractAuthenticator
      * 
      * @param string $sessionKey 会话key
      * @param think\Session thinkphp的Session对象
+     * @param think\Hook thinkphp的钩子对象
+     * @param UserProvider $provider 认证用户提供器
      * @return void
      */
-    public function __construct(string $sessionKey = 'UserIdentity', Session $session, Hook $hook, UserProvider $provider)
+    public function __construct(
+        string $sessionKey = 'UserIdentity', 
+        Session $session, 
+        Hook $hook, 
+        UserProvider $provider)
     {
         $this->sessionKey = $sessionKey;
         $this->session = $session;
 
         parent::__construct($provider, $hook);
+    }
+
+    /**
+     * @inheritDoc
+     */ 
+    protected function validate(UserIdentity $user, array $credentials)
+    {
+        return $this->provider->validateCredentials($user, $credentials);
     }
 
     /**
@@ -52,6 +65,7 @@ class SessionAuthenticator extends AbstractAuthenticator
         $this->session->set($this->sessionKey, $user->getId());
         $this->user = $user;
     }
+
 
     /**
      * @inheritDoc
