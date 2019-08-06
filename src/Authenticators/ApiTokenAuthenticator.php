@@ -88,6 +88,10 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
 
         $this->cache->set($token, $user->id, $this->cacheExpire);
         $this->user = $user;
+
+        return [
+            'token' => $token,
+        ];
     }
 
     /**
@@ -110,6 +114,9 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
 
         $id = $this->cache->get($token);
         $user = $this->provider->findById($id);
+
+        // 更新缓存时间
+        $this->cache->set($token, $user->id, $this->cacheExpire);
 
         return $user;
     }

@@ -12,7 +12,7 @@ interface Authenticator
      * 登录验证
      * 
      * @param array $credentials 认证凭证
-     * @return bool
+     * @return Result
      */
     public function login(array $credentials);
 
