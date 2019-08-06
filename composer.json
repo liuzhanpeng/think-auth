@@ -1,0 +1,18 @@
+{
+    "name": "peng/think-auth",
+    "type": "library",
+    "authors": [
+        {
+            "name": "刘展鹏",
+            "email": "liuzhanpeng@gmail.com"
+        }
+    ],
+    "require": {
+        "topthink/framework": "v5.1.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Lzpeng\\Auth\\": "src/"
+        }
+    }
+}
