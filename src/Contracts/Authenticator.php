@@ -12,8 +12,7 @@ interface Authenticator
      * 登录验证
      * 
      * @param array $credentials 认证凭证
-     * @return void
-     * @throws AuthenticationException
+     * @return bool
      */
     public function login(array $credentials);
 
