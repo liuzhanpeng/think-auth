@@ -2,9 +2,15 @@
 namespace Lzpeng\Auth;
 
 use Lzpeng\Auth\Contracts\Authenticator;
+use Lzpeng\Auth\Contracts\UserProvider;
+use Lzpeng\Auth\Contracts\UserIdentity;
+use Lzpeng\Auth\Exceptions\InvalidCredentialsException;
+use think\Hook;
 
 /**
+ * 认证器抽象类
  * 
+ * @author 刘展鹏 <liuzhanpeng@gmail.com>
  */
 abstract class AbstractAuthenticator implements Authenticator
 {
@@ -17,6 +23,16 @@ abstract class AbstractAuthenticator implements Authenticator
      * 登录后事件名称 
      */
     const EVENT_LOGIN_AFTER = 'login_after';
+
+    /**
+     * 登出前事件名称
+     */
+    const EVENT_LOGOUT_BEFORE = 'logout_before';
+
+    /**
+     * 登出后事件名称
+     */
+    const EVENT_LOGOUT_AFTER = 'logout_after';
 
     /**
      * 认证用户对象
@@ -33,6 +49,25 @@ abstract class AbstractAuthenticator implements Authenticator
     protected $provider;
 
     /**
+     * 钩子
+     *
+     * @var think\Hook
+     */
+    protected $hook;
+
+    /**
+     * 构造函数
+     *
+     * @param think\Hook $hook 钩子
+     * @return void
+     */
+    public function __construct(UserProvider $provider, Hook $hook)
+    {
+        $this->provider = $provider;
+        $this->hook = $hook;
+    }
+
+    /**
      * @inheritDoc
      */
     public function login(array $credentials)
@@ -40,15 +75,13 @@ abstract class AbstractAuthenticator implements Authenticator
         $this->hook->listen(self::EVENT_LOGIN_BEFORE, $credentials);
 
         $user = $this->provider->findByCredentials($credentials);
-        if (!is_null($user) && $this->provider->validateCredentials($user, $credentials)) {
-            $this->forceLogin($user);
-
-            return true;
+        if (is_null($user) || !$this->provider->validateCredentials($user, $credentials)) {
+            throw new InvalidCredentialsException('无效用户凭证');
         }
 
-        $this->hook->listen(self::EVENT_LOGIN_AFTER, $user);
+        $this->forceLogin($user);
 
-        return false;
+        $this->hook->listen(self::EVENT_LOGIN_AFTER, $user);
     }
 
     /**
@@ -69,4 +102,26 @@ abstract class AbstractAuthenticator implements Authenticator
     {
         return !is_null($this->getUser());
     }
+
+    /**
+     * 获取认证用户提供器
+     *
+     * @return UserProvider
+     */
+    public function getProvider()
+    {
+        return $this->provider;
+    }
+
+    /**
+     * 设置认证用户提供器
+     *
+     * @param UserProvider $provider 认证用户提供器
+     * @return void
+     */
+    public function setProvider(UserProvider $provider)
+    {
+        $this->provider = $provider;
+    }
+
 }
