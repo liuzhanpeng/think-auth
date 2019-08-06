@@ -10,6 +10,8 @@ use think\Hook;
 
 /**
  * 基于session的用户认证器
+ * 
+ * @author 刘展鹏 <liuzhanpeng@gmail.com>
  */
 class SessionAuthenticator extends AbstractAuthenticator
 {
@@ -28,27 +30,18 @@ class SessionAuthenticator extends AbstractAuthenticator
     private $session;
 
     /**
-     * 钩子
-     * 
-     * @var think\Hook
-     */
-    private $hook;
-
-    /**
      * 构造函数
      * 
      * @param string $sessionKey 会话key
      * @param think\Session thinkphp的Session对象
-     * @param think\Hook thinkphp的Hook对象
-     * @param UserProvider $provider 认证用户对象提供器
      * @return void
      */
-    public function __construct(string $sessionKey, Session $session, Hook $hook, UserProvider $provider)
+    public function __construct(string $sessionKey = 'UserIdentity', Session $session, Hook $hook, UserProvider $provider)
     {
         $this->sessionKey = $sessionKey;
         $this->session = $session;
-        $this->hook = $hook;
-        $this->provider = $provider;
+
+        parent::__construct($provider, $hook);
     }
 
     /**
@@ -75,6 +68,16 @@ class SessionAuthenticator extends AbstractAuthenticator
 
             return $user;
         }
+
+        return null;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setUser(UserIdentity $user)
+    {
+        $this->user = $user;
     }
 
     /**
