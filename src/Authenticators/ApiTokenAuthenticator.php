@@ -7,6 +7,7 @@ use Lzpeng\Auth\Contracts\UserIdentity;
 use Lzpeng\Auth\AbstractAuthenticator;
 use think\Request;
 use think\Cache;
+use think\Hook;
 
 /**
  * 基于请求头token的用户认证器

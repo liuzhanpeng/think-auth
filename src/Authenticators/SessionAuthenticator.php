@@ -6,6 +6,7 @@ use Lzpeng\Auth\Contracts\UserProvider;
 use Lzpeng\Auth\Contracts\UserIdentity;
 use Lzpeng\Auth\AbstractAuthenticator;
 use think\Session;
+use think\Hook;
 
 /**
  * 基于session的用户认证器

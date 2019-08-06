@@ -26,6 +26,13 @@ class AuthManager
     private $authenticator;
 
     /**
+     * 注入容器
+     *
+     * @var think\Container
+     */
+    private $container;
+
+    /**
      * 内部认证器列表
      *
      * @var array
@@ -56,7 +63,7 @@ class AuthManager
     /**
      * 构造函数
      *
-     * @param Config $cfg 配置对象
+     * @param think\Config $cfg 配置对象
      * @return void
      */
     public function __construct(Config $cfg)
@@ -107,7 +114,7 @@ class AuthManager
             $authenticatorClass = $driver;
         }
 
-        Container::getInstance()->bindTo(Authenticator::class, $authenticatorClass);
+        Container::set(Authenticator::class, $authenticatorClass);
     }
 
     /**
@@ -124,7 +131,7 @@ class AuthManager
             $providerClass = $driver;
         }
 
-        Container::getInstance()->bindTo(UserProvider::class, $providerClass);
+        Container::set(UserProvider::class, $providerClass);
     }
 
     /**
@@ -141,7 +148,7 @@ class AuthManager
             $hasherClass = $driver;
         }
 
-        Container::getInstance()->bindTo(PasswordHasherContract::class, $hasherClass);
+        Container::set(PasswordHasherContract::class, $hasherClass);
     }
 
     /**
