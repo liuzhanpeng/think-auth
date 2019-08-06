@@ -44,7 +44,7 @@ class Result
      * @param integer $status 状态
      * @param array $data 扩展数据
      */
-    public function __construct(int $status = slef::STATUS_FAILURE, array $data = [])
+    public function __construct(int $status = self::STATUS_FAILURE, array $data = [])
     {
         $this->status = $status;
         $this->data = $data;
@@ -55,7 +55,7 @@ class Result
      */
     public function isValid()
     {
-        return $this->status === slef::STATUS_SUCCESS;
+        return $this->status === self::STATUS_SUCCESS;
     }
 
     /**
