@@ -3,6 +3,8 @@ namespace Lzpeng\Auth\Contracts;
 
 /**
  * 用户提供器接口
+ * 
+ * @author 刘展鹏 <liuzhanpeng@gmail.com>
  */
 interface UserProvider
 {

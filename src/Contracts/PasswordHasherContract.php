@@ -2,17 +2,19 @@
 namespace Lzpeng\Auth\Contracts;
 
 /**
- * 密码hash接口
+ * 密码hash处理器接口
+ * 
+ * @author 刘展鹏 <liuzhanpeng@gmail.com>
  */
-interface HashContract
+interface PasswordHasherContract
 {
     /**
-     * 生成hash密码
+     * hash密码
      * 
      * @param string $password 原始密码
      * @return string
      */
-    public function create(string $password);
+    public function hash(string $password);
 
     /**
      * 检测密码hash值是否正确
