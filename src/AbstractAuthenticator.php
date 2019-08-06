@@ -4,6 +4,7 @@ namespace Lzpeng\Auth;
 use Lzpeng\Auth\Contracts\Authenticator;
 use Lzpeng\Auth\Contracts\UserProvider;
 use Lzpeng\Auth\Contracts\UserIdentity;
+use Lzpeng\Auth\Result;
 use think\Hook;
 
 /**
@@ -71,17 +72,19 @@ abstract class AbstractAuthenticator implements Authenticator
 
         $user = $this->provider->findByCredentials($credentials);
         if (!is_null($user) && $this->validate($user, $credentials)) {
-            $this->forceLogin($user);
+            $data = $this->forceLogin($user);
 
             $this->hook->listen(self::EVENT_LOGIN_SUCCESS, [
                 'credentials' => $credentials,
                 'user' => $user,
             ]);
-            return true;
+
+            return new Result(Result::STATUS_SUCCESS, $data);
         }
 
         $this->hook->listen(self::EVENT_LOGIN_FAILED, $credentials);
-        return false;
+
+        return new Result(Result::STATUS_FAILURE);
     }
 
     /**
@@ -100,7 +103,7 @@ abstract class AbstractAuthenticator implements Authenticator
      * 保存认证对象逻辑
      *
      * @param UserIdentity $user 认证用户对象
-     * @return void
+     * @return array
      */
     protected function forceLogin(UserIdentity $user)
     {

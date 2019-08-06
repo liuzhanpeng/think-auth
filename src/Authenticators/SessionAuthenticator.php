@@ -65,6 +65,8 @@ class SessionAuthenticator extends AbstractAuthenticator
     {
         $this->session->set($this->sessionKey, $user->getId());
         $this->user = $user;
+
+        return [];
     }
 
 
