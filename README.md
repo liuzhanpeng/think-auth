@@ -13,12 +13,18 @@ composer.json 添加以下内容
         "url": "http://172.0.6.108:3000/lzpeng/think-auth"
     }
 ],
+
+// 设置非安全链接
+"config": {
+    ...
+    "secure-http": false
+}
 ```
 
 然后命令行运行
 
 ```
-composer require peng/think-auth=dev-master
+composer require lzpeng/think-auth=1.0.*
 ```
 
 ## 配置
