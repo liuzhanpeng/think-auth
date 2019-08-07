@@ -12,7 +12,7 @@ class AuthenticationCheck
 {
     public function handle(Request $request, \Closure $next)
     {
-        if (Auth::isLogined()) {
+        if (!Auth::isLogined()) {
             throw new AuthenticationException('认证失败');
         }
 
