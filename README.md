@@ -24,7 +24,7 @@ composer.json 添加以下内容
 然后命令行运行
 
 ```
-composer require peng/think-auth=dev-master
+composer require lzpeng/think-auth=1.0.*
 ```
 
 ## 配置
