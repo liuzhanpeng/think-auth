@@ -17,6 +17,13 @@ interface Authenticator
     public function login(array $credentials);
 
     /**
+     * 获取用户标识
+     *
+     * @return mixed
+     */
+    public function getId();
+
+    /**
      * 获取当前认证用户对象
      * 
      * @return UserIdentity|null
