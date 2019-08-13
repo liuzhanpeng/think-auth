@@ -97,6 +97,27 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
     /**
      * @inheritDoc
      */
+    public function getId()
+    {
+        if (!is_null($this->user)) {
+            return $this->user->getId();
+        }
+
+        $token = $this->getRequestToken();
+        if (empty($token)) {
+            return;
+        }
+
+        if ($this->cache->has($token)) {
+            return $this->cache->get($token);
+        }
+
+        return null;
+    }        
+        
+    /**
+     * @inheritDoc
+     */
     public function getUser()
     {
         if (!is_null($this->user)) {
@@ -108,17 +129,17 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
             return;
         }
 
-        if (!$this->cache->has($token)) {
-            return;
+        if ($this->cache->has($token)) {
+            $id = $this->cache->get($token);
+            $user = $this->provider->findById($id);
+
+            // 更新缓存时间
+            $this->cache->set($token, $user->id, $this->cacheExpire);
+
+            return $user;
         }
 
-        $id = $this->cache->get($token);
-        $user = $this->provider->findById($id);
-
-        // 更新缓存时间
-        $this->cache->set($token, $user->id, $this->cacheExpire);
-
-        return $user;
+        return null;
     }
 
     /**
