@@ -96,7 +96,7 @@ class SessionAuthenticator extends AbstractAuthenticator
 
         if ($this->session->has($this->sessionKey)) {
             $id = $this->session->get($this->sessionKey);
-            $user = $this->provider->findById();
+            $user = $this->provider->findById($id);
 
             return $user;
         }
