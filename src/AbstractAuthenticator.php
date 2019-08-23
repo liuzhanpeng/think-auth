@@ -79,10 +79,7 @@ abstract class AbstractAuthenticator implements Authenticator
                 'user' => $user,
             ]);
 
-            return new Result(Result::STATUS_SUCCESS, [
-                'user' => $user,
-                'data' => $data,
-            ]);
+            return new Result(Result::STATUS_SUCCESS, $data);
         }
 
         $this->hook->listen(self::EVENT_LOGIN_FAILED, $credentials);
