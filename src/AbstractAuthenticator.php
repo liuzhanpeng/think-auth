@@ -69,11 +69,14 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
         try {
             $user = $this->provider->findbycredentials($credentials);
             if (!is_null($user) && $this->provider->validateCredentials($user, $credentials)) {
-                $this->persistUser($user);
+                $result = $this->persistUser($user);
 
-                $this->listen(self::EVENT_LOGIN_SUCCESS, $user);
+                $this->listen(self::EVENT_LOGIN_SUCCESS, [
+                    'user' => $user,
+                    'result' => $result,
+                ]);
 
-                return $this->user = $user;
+                return $result;
             } else {
                 throw new AuthenticationException('认证失败', 401);
             }
@@ -129,13 +132,9 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
 
 
     /**
-     * 注册行为
-     *
-     * @param string $event 事件名称
-     * @param mixed $behavior 行为
-     * @return void
+     * @inheritDoc
      */
-    public function addBehavior(string $event, $behavior)
+    public function attachBehavior(string $event, $behavior)
     {
         $events = [self::EVENT_LOGIN_FAILED, self::EVENT_LOGIN_SUCCESS, self::EVENT_LOGIN_FAILED, self::EVENT_LOGOUT_BEFORE, self::EVENT_LOGOUT_AFTER];
         if (!in_array($event, $events)) {
