@@ -1,6 +1,7 @@
 <?php
 namespace Lzpeng\Auth\Authenticators;
 
+use Lzpeng\Auth\Contracts\UserProvider;
 use Lzpeng\Auth\AbstractAuthenticator;
 use think\Session;
 use think\Hook;
@@ -18,14 +19,14 @@ class SessionAuthenticator extends AbstractAuthenticator
      * 
      * @var string
      */
-    private $sessionKey;
+    protected $sessionKey;
 
     /**
      * session对象
      * 
      * @var think\Session
      */
-    private $session;
+    protected $session;
 
     /**
      * 构造函数
@@ -39,7 +40,7 @@ class SessionAuthenticator extends AbstractAuthenticator
      */
     public function __construct(
         string $name, 
-        string $sessionKey, 
+        string $sessionKey = 'UserIdentity', 
         Session $session, 
         UserProvider $provider, 
         Hook $hook
@@ -75,11 +76,9 @@ class SessionAuthenticator extends AbstractAuthenticator
             return $this->user;
         }
 
-        if ($this->session->has($this->sessionKey)) {
-            $id = $this->session->get($this->sessionKey);
-            $user = $this->provider->findById($id);
-
-            return $user;
+        $id = $this->getId();
+        if (!is_null($id)) {
+            return $this->provider->findById($id);
         }
 
         return null;
