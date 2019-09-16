@@ -34,11 +34,11 @@ interface AuthBehavior
     const EVENT_LOGOUT_AFTER = 'logout_after';
 
     /**
-     * 添加行为
+     * 注册行为
      *
      * @param string $event 事件名称
      * @param mixed $behavior 添加的行为
      * @return void
      */
-    public function addBehavior(string $event, $behavior);
+    public function attachBehavior(string $event, $behavior);
 }

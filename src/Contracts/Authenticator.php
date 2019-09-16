@@ -15,7 +15,7 @@ interface Authenticator
      * 认证登录
      *
      * @param array $credentials 用户凭证
-     * @return UserIdentity 返回用户认证对象
+     * @return mixed 根据不同需要返回不同的数据; 例如: SimpleTokenAuthenticator返回token
      * @throws AuthenticationException
      */
     public function login(array $credentials);
