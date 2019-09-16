@@ -3,6 +3,7 @@ namespace Lzpeng\Auth;
 
 use Lzpeng\Auth\Contracts\Authenticator;
 use Lzpeng\Auth\Contracts\UserProvider;
+use Lzpeng\Auth\Contracts\AuthBehavior;
 use Lzpeng\Auth\Exceptions\AuthenticationException;
 use think\Hook;
 
@@ -13,33 +14,8 @@ use think\Hook;
  * 
  * @author 刘展鹏 <liuzhanpeng@gmail.com>
  */
-abstract class AbstractAuthenticator implements Authenticator
+abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
 {
-    /**
-     * 登录前事件名称 
-     */
-    const EVENT_LOGIN_BEFORE = 'login_before';
-
-    /**
-     * 登录成功事件名称 
-     */
-    const EVENT_LOGIN_SUCCESS = 'login_success';
-
-    /**
-     * 登录失败事件名称 
-     */
-    const EVENT_LOGIN_FAILED = 'login_failed';
-
-    /**
-     * 登出前事件名称
-     */
-    const EVENT_LOGOUT_BEFORE = 'logout_before';
-
-    /**
-     * 登出后事件名称
-     */
-    const EVENT_LOGOUT_AFTER = 'logout_after';
-
     /**
      * 用户认证对象
      * 
