@@ -22,6 +22,7 @@ interface UserProvider
      * 
      * @param array $credentials 用户凭证
      * @return UserIdentity | null
+     * @throws AuthenticationException 通过返回异常可以抛出详细认证失败信息
      */
     public function findByCredentials(array $credentials);
 
@@ -32,6 +33,7 @@ interface UserProvider
      * @param UserIdentity $user 认证用户对象
      * @param array $credentials 用户凭证
      * @return bool
+     * @throws AuthenticationException 通过返回异常可以抛出详细认证失败信息
      */
     public function validateCredentials(UserIdentity $user, array $credentials);
 }

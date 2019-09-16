@@ -9,7 +9,7 @@ use Lzpeng\Auth\Exceptions\AuthenticationException;
  * 
  * @author 刘展鹏 <liuzhanpeng@gmail.com>
  */
-interface AuthenticatorContract
+interface Authenticator
 {
     /**
      * 认证登录
