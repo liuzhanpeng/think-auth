@@ -4,8 +4,33 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0efc1709e64d38b3924be498032b17a7",
+    "content-hash": "e2e9174dafdcbdb9293ad378975c9746",
     "packages": [
+        {
+            "name": "lzpeng/think-service-provider",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "http://172.0.6.108:3000/lzpeng/think-service-provider",
+                "reference": "0f2bdd01a9806d04cf4716578d13a0e3b6885de2"
+            },
+            "require": {
+                "topthink/framework": "v5.1.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Lzpeng\\ServiceProvider\\": "src/"
+                }
+            },
+            "authors": [
+                {
+                    "name": "刘展鹏",
+                    "email": "liuzhanpeng@gmail.com"
+                }
+            ],
+            "time": "2019-09-06T07:54:40+00:00"
+        },
         {
             "name": "topthink/framework",
             "version": "v5.1.37.1",
@@ -18,13 +43,7 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/top-think/framework/zipball/05eecd121d18d6705aaa10aa44fcdf7c14da4d0b",
                 "reference": "05eecd121d18d6705aaa10aa44fcdf7c14da4d0b",
-                "shasum": "",
-                "mirrors": [
-                    {
-                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
-                        "preferred": true
-                    }
-                ]
+                "shasum": ""
             },
             "require": {
                 "php": ">=5.6.0",
@@ -75,13 +94,7 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/top-think/think-installer/zipball/f5400a12c60e513911aef41fe443fa6920952675",
                 "reference": "f5400a12c60e513911aef41fe443fa6920952675",
-                "shasum": "",
-                "mirrors": [
-                    {
-                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
-                        "preferred": true
-                    }
-                ]
+                "shasum": ""
             },
             "require": {
                 "composer-plugin-api": "^1.0"
