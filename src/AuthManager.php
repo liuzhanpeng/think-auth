@@ -44,12 +44,10 @@ class AuthManager
 
     /**
      * 构造函数
-     * 
-     * @param think\Container $container 服务组件容器
      */
-    public function __construct(Container $container)
+    public function __construct()
     {
-        $this->container = $container;
+        $this->container = Container::getInstance();
     }
 
     /**
@@ -69,7 +67,7 @@ class AuthManager
         }
 
         // 如果已存在实例，直接返回
-        if (iiset($this->authenticators[$name]))  {
+        if (isset($this->authenticators[$name]))  {
             return $this->authenticators[$name];
         }
 
@@ -132,7 +130,7 @@ class AuthManager
     {
         $config = $this->getAuthenticatorConfig($name);
 
-        if (!isset($config['dirver'])) {
+        if (!isset($config['driver'])) {
             throw new \InvalidArgumentException(sprintf('请配置认证器[%s]驱动driver', $name));
         }
 
@@ -229,7 +227,7 @@ class AuthManager
         if ($authenticator instanceof AuthBehavior) {
             foreach ($behaviors as $event => $items) {
                 foreach ($items as $item) {
-                    $authenticator->attachBehaviors($event, $item);
+                    $authenticator->attachBehavior($event, $item);
                 }
             }
         }
@@ -323,11 +321,22 @@ class AuthManager
             $className = $driver;
         } else {
             $driver = ucfirst($driver);
-            $className = "\\Lzpeng\\Aut\\Hasher\\{$driver}Hasher";
+            $className = "\\Lzpeng\\Auth\\Hashers\\{$driver}Hasher";
         }
 
         unset($config['driver']);
 
         return $this->container->make($className, $config);
+    }
+
+    /**
+     * 调用默认authenticator的实例方法
+     * 
+     * @param string $method 方法名称
+     * @param array $arguments 方法参数
+     */
+    public function __call($method, $arguments)
+    {
+        return $this->make()->{$method}(...$arguments);
     }
 }

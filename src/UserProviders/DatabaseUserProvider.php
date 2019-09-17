@@ -68,7 +68,7 @@ class DatabaseUserProvider implements UserProvider
         $this->table = $table;
         $this->idKey = $options['idKey'] ?? 'id';
         $this->passwordKey = $options['passwordKey'] ?? 'password';
-        $this->forceValidatePassword = $hasher;
+        $this->forceValidatePassword = $forceValidatePassword;
         $this->hasher = $hasher;
     }
 

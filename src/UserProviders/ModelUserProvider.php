@@ -4,6 +4,7 @@ namespace Lzpeng\Auth\UserProviders;
 use Lzpeng\Auth\Contracts\UserProvider;
 use Lzpeng\Auth\Contracts\UserIdentity;
 use Lzpeng\Auth\Contracts\Hasher;
+use Lzpeng\Auth\Exceptions\AuthenticationException;
 use think\Model;
 
 /**
@@ -67,7 +68,7 @@ class ModelUserProvider implements UserProvider
         $this->modelClass = $modelClass;
         $this->idKey = $idKey;
         $this->passwordKey = $passwordKey;
-        $this->forceValidatePassword = $hasher;
+        $this->forceValidatePassword = $forceValidatePassword;
         $this->hasher = $hasher;
     }
 
@@ -88,7 +89,8 @@ class ModelUserProvider implements UserProvider
             return null;
         }
 
-        $query = $this->createModel();
+        $model = $this->createModel();
+        $query = $model::field('*');
 
         // 循环设置查询条件
         foreach ($credentials as $key => $val) {

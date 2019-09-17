@@ -57,7 +57,6 @@ class SimpleTokenAuthenticator extends AbstractAuthenticator
         Hook $hook
     ) {
         $this->tokenKey = $tokenKey;
-        $this->cacheExpire = $cacheExpire;
         $this->cache = $cache;
         $this->request = $request;
 

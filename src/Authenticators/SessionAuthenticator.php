@@ -2,6 +2,7 @@
 namespace Lzpeng\Auth\Authenticators;
 
 use Lzpeng\Auth\Contracts\UserProvider;
+use Lzpeng\Auth\Contracts\UserIdentity;
 use Lzpeng\Auth\AbstractAuthenticator;
 use think\Session;
 use think\Hook;

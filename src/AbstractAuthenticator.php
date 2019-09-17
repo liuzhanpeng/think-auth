@@ -3,6 +3,7 @@ namespace Lzpeng\Auth;
 
 use Lzpeng\Auth\Contracts\Authenticator;
 use Lzpeng\Auth\Contracts\UserProvider;
+use Lzpeng\Auth\Contracts\UserIdentity;
 use Lzpeng\Auth\Contracts\AuthBehavior;
 use Lzpeng\Auth\Exceptions\AuthenticationException;
 use think\Hook;
@@ -67,7 +68,7 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
         $this->listen(self::EVENT_LOGIN_BEFORE, $credentials);
 
         try {
-            $user = $this->provider->findbycredentials($credentials);
+            $user = $this->provider->findByCredentials($credentials);
             if (!is_null($user) && $this->provider->validateCredentials($user, $credentials)) {
                 $result = $this->persistUser($user);
 
@@ -86,7 +87,7 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
                 'exception' => $exception,
             ]);
 
-            throw $ex;
+            throw $exception;
         }
     }
 
