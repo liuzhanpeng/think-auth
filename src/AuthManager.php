@@ -2,176 +2,332 @@
 namespace Lzpeng\Auth;
 
 use Lzpeng\Auth\Contracts\Authenticator;
+use Lzpeng\Auth\Contracts\AuthBehavior;
 use Lzpeng\Auth\Contracts\UserProvider;
-use Lzpeng\Auth\Contracts\PasswordHasherContract;
+use Lzpeng\Auth\Contracts\Hasher;
 use Lzpeng\Auth\Authenticators\SessionAuthenticator;
-use Lzpeng\Auth\Authenticators\ApiTokenAuthenticator;
-use Lzpeng\Auth\UserProviders\GenericModelUserProvider;
-use Lzpeng\Auth\Hashers\DefaultPasswordHasher;
-use think\Config;
+use Lzpeng\Auth\Authenticators\SimpleTokenAuthenticator;
+use Lzpeng\Auth\UserProviders\ModelUserProvider;
+use Lzpeng\Auth\UserProviders\DatabaseUserProvider;
 use think\Container;
 
-/**
- * 认证管理类
- * 
- * @author 刘展鹏 <liuzhanpeng@gmail.com>
- */
 class AuthManager
 {
     /**
-     * 当前认证器
-     * 
-     * @var Authenticator
-     */
-    private $authenticator;
-
-    /**
-     * 注入容器
+     * 服务组件容器
      *
      * @var think\Container
      */
-    private $container;
+    protected $container;
 
     /**
-     * 内部认证器列表
+     * 已创建的认证器实例列表
      *
      * @var array
      */
-    private $innerAuthenticators = [
-        'session' => SessionAuthenticator::class,
-        'apiToken' => ApiTokenAuthenticator::class,
-    ];
+    protected $authenticators = [];
 
     /**
-     * 内部用户提供器列表
+     * 自定义认证器创建者列表
+     * 认证器创建者为Closure, 返回认证器实例
      *
      * @var array
      */
-    private $innerUserProviders = [
-        'genericModel' => GenericModelUserProvider::class,
-    ];
-   
+    protected $customAuthenticatorCreators = [];
+
     /**
-     * 内部密码hasher
+     * 自定义用户提供器创建者列表
      *
      * @var array
      */
-    private $innerHashers = [
-        'default' => DefaultPasswordHasher::class,
-    ];
+    protected $customUserProviderCreators = [];
 
     /**
      * 构造函数
-     *
-     * @param think\Config $cfg 配置对象
-     * @return void
+     * 
+     * @param think\Container $container 服务组件容器
      */
-    public function __construct(Config $cfg)
+    public function __construct(Container $container)
     {
-        $config = $cfg->get('auth.authenticator');
-
-        $this->bindContracts($config);
-
-        $this->authenticator = $this->getAuthenticator($config);
+        $this->container = $container;
     }
 
     /**
-     * 绑定实现到接口
+     * 创建认证器
      *
-     * @param array $config
+     * @param string | null $name 认证器配置标识
+     * @return Authenticator
+     * @throws Exception
+     */
+    public function make($name = null)
+    {
+        if (is_null($name)) {
+            $name = $this->container->make('config')->get('auth.default');
+            if (is_null($name)) {
+                throw new \InvalidArgumentException('请配置默认认证器');
+            }
+        }
+
+        // 如果已存在实例，直接返回
+        if (iiset($this->authenticators[$name]))  {
+            return $this->authenticators[$name];
+        }
+
+        return $this->authenticators[$name] = $this->createAuthentiator($name);
+    }
+
+
+    /**
+     * 注册自定义认证器创建者
+     *
+     * @param string $driver 认证器驱动
+     * @param \Closure $callback 回调函数
      * @return void
      */
-    private function bindContracts(array $config)
+    public function registerAuthenticatorCreator(string $driver, \Closure $callback)
     {
-        if (!isset($config['driver'])) {
-            throw new \Exception('无效authenticator配置');
-        }
-        $this->bindAuthenticator($config['driver']);
-
-        if (!isset($config['provider']) || !isset($config['provider']['driver'])) {
-            throw new \Exception('无效provider配置');
-        }
-        $this->bindUserProvider($config['provider']['driver']);
-
-        if (isset($config['provider']['hasher'])) {
-            $this->bindHasher($config['provider']['hasher']['driver']);
-        } else {
-            $this->bindHasher('default');
-        }
+        $this->customAuthenticatorCreators[$driver] = $callback;
     }
 
     /**
-     * 根据配置信息绑定认证器
+     * 注册自定义用户提供器创建者
      *
-     * @param string $driver 接口的实现驱动
+     * @param string $driver 用户提供器驱动
+     * @param \Closure $callback 回调函数
      * @return void
      */
-    private function bindAuthenticator(string $driver)
+    public function registerUserProviderCreator(string $driver, \Closure $callback)
     {
-        if (array_key_exists($driver, $this->innerAuthenticators)) {
-            $authenticatorClass = $this->innerAuthenticators[$driver];
-        } else {
-            $authenticatorClass = $driver;
-        }
-
-        Container::set(Authenticator::class, $authenticatorClass);
+        $this->customUserProviderCreators[$driver] = $callback;
     }
 
     /**
-     * 根据配置信息绑定用户提供器
+     * 获取指定标识的认证器配置
      *
-     * @param string $driver 接口的实现驱动
-     * @return void
+     * @param string $name 认证器标识
+     * @return array
      */
-    private function bindUserProvider(string $driver)
+    private function getAuthenticatorConfig(string $name)
     {
-        if (array_key_exists($driver, $this->innerUserProviders)) {
-            $providerClass = $this->innerUserProviders[$driver];
-        } else {
-            $providerClass = $driver;
+        $config = $this->container->make('config')->get('auth.');
+        
+        if (is_null($config)) {
+            throw new \InvalidArgumentException('找不到配置auth');
         }
 
-        Container::set(UserProvider::class, $providerClass);
+        if (!isset($config['authenticators'][$name])) {
+            throw new \InvalidArgumentException(sprintf('认证器配置[%s]无效', $name));
+        }
+
+        return $config['authenticators'][$name];
     }
 
     /**
-     * 绑定密码hasher
+     * 创建认证器
      *
-     * @param string $driver 接口的实现驱动
-     * @return void
-     */
-    private function bindHasher(string $driver)
-    {
-        if (array_key_exists($driver, $this->innerHashers)) {
-            $hasherClass = $this->innerHashers[$driver];
-        } else {
-            $hasherClass = $driver;
-        }
-
-        Container::set(PasswordHasherContract::class, $hasherClass);
-    }
-
-    /**
-     * 根据配置信息获取认证器
-     *
-     * @param array $config
+     * @param string $name 认证器配置标识
      * @return Authenticator
      */
-    private function getAuthenticator(array $config)
+    private function createAuthentiator(string $name)
     {
-        if (isset($config['provider']['hasher'])) {
-            Container::get(PasswordHasherContract::class, $config['provider']['hasher']);
+        $config = $this->getAuthenticatorConfig($name);
+
+        if (!isset($config['dirver'])) {
+            throw new \InvalidArgumentException(sprintf('请配置认证器[%s]驱动driver', $name));
         }
 
-        Container::get(UserProvider::class, $config['provider']);
-        return Container::get(Authenticator::class, $config);
+        $driver = $config['driver'];
+        if (isset($this->customAuthenticatorCreators[$driver])) {
+            $authenticator = $this->customAuthenticatorCreators[$driver]($this->container, $name, $config);
+            if (!$authenticator instanceof Authenticator) {
+                throw new \InvalidArgumentException(sprintf('自定义认证器驱动[%s]未实现Authenticator接口', $driver));
+            }
+
+            return $authenticator;
+        }
+
+        switch ($driver) {
+            case 'session':
+                return $this->createSessionAuthenticator($name, $config);
+            case 'simpleToken':
+                return $this->createTokenAuthenticator($name, $config);
+            default:
+                throw new \InvalidArgumentException(sprintf('不支持的认证器驱动[%s]', $driver));
+        }
     }
 
     /**
-     * 调用authenticator的实例方法
+     * 创建SessionAuthenticator
+     *
+     * @param string $name 认证器标识
+     * @param array $config 配置
+     * @return SessionAuthenticator
      */
-    public function __call($method, $arguments)
+    private function createSessionAuthenticator(string $name, array $config)
     {
-        return $this->authenticator->{$method}(...$arguments);
+        if (!isset($config['sessionKey'])) {
+            throw new \InvalidArgumentException('找不到配置sessionKey');
+        }
+
+        $userProvider = $this->createUserProvider($config['provider']);
+
+        $authenticator = new SessionAuthenticator(
+            $name, 
+            $config['sessionKey'], 
+            $this->container->make('session'),
+            $userProvider,
+            $this->container->make('hook')
+        );
+
+        if (isset($config['behaviors'])) {
+            $this->attachBehaviors($authenticator, $config['behaviors']);
+        }
+
+        return $authenticator;
+    }
+
+    /**
+     * 创建Tokenthenticator
+     *
+     * @param string $name 认证器标识
+     * @param array $config 配置
+     * @return SimpleTokenAuthenticator
+     */
+    private function createTokenAuthenticator(string $name, array $config)
+    {
+        if (!isset($config['tokenKey'])) {
+            throw new \InvalidArgumentException('找不到配置tokenKey');
+        } 
+
+        $userProvider = $this->createUserProvider($config['provider']);
+
+        $authenticator = new SimpleTokenAuthenticator(
+            $name, 
+            $config['tokenKey'], 
+            new \think\Cache($config['cache'] ?? []),
+            $this->container->make('request'),
+            $userProvider,
+            $this->container->make('hook')
+        );
+
+        if (isset($config['behaviors'])) {
+            $this->attachBehaviors($authenticator, $config['behaviors']);
+        }
+
+        return $authenticator;
+    }
+
+    /**
+     * 认证器附加行为
+     *
+     * @param Authenticator $authenticator 认证器
+     * @param array $behaviors 行为配置数组
+     * @return void
+     */
+    private function attachBehaviors(Authenticator $authenticator, array $behaviors)
+    {
+        if ($authenticator instanceof AuthBehavior) {
+            foreach ($behaviors as $event => $items) {
+                foreach ($items as $item) {
+                    $authenticator->attachBehaviors($event, $item);
+                }
+            }
+        }
+    }
+
+    /**
+     * 创建用户提供器
+     *
+     * @param array $config 配置
+     * @return UserProvider
+     */
+    private function createUserProvider(array $config)
+    {
+        $driver = $config['driver'];
+        if (isset($this->customUserProviderCreators[$driver])) {
+            $userProvider = $this->customUserProviderCreators[$driver]($this->container, $config);
+            if (!$userProvider instanceof UserProvider) {
+                throw new \InvalidArgumentException(sprintf('自定义用户提供器驱动[%s]未实现UserProvider接口', $driver));
+            }
+
+            return $userProvider;
+        }
+    
+        switch ($driver) {
+            case 'model':
+                return $this->createModelUserProvider($config);
+            case 'database':
+                return $this->createDatabaseUserProvider($config);
+            default:
+                throw new \InvalidArgumentException(sprintf('不支持的用户提供器驱动配置[%s]', $driver));
+        }
+    }
+
+    /**
+     * 创建ModelUserProvider
+     *
+     * @param array $config 配置
+     * @return ModelUserProvider
+     */
+    private function createModelUserProvider(array $config)
+    {
+        if (!isset($config['modelClass'])) {
+            throw new \InvalidArgumentException(sprintf('用户提供器[%s]缺少配置项modelClass', $config['driver']));
+        }
+
+        $modelClass = $config['modelClass'];
+        $idKey = $config['idKey'] ?? 'id';
+        $passwordKey = $config['passwordKey'] ?? 'password';
+        $forceValidatePassword = $config['forceValidatePassword'] ?? true;
+
+        $hasher = $this->createHasher($config['hasher']);
+
+        return new ModelUserProvider($modelClass, $idKey, $passwordKey, $forceValidatePassword, $hasher);
+    }
+
+    /**
+     * 创建DatabaseUserProvider
+     *
+     * @param array $config 配置
+     * @return DatabaseUserProvider
+     */
+    private function createDatabaseUserProvider(array $config)
+    {
+        if (!isset($config['table'])) {
+            throw new \InvalidArgumentException(sprintf('用户提供器[%s]缺少配置项table', $config['driver']));
+        }
+        if (!isset($config['hasher'])) {
+            throw new \InvalidArgumentException(sprintf('用户提供器[%s]缺少配置项hasher', $config['driver']));
+        }
+
+        $table = $config['table'];
+        $idKey = $config['idKey'] ?? 'id';
+        $passwordKey = $config['passwordKey'] ?? 'password';
+        $forceValidatePassword = $config['forceValidatePassword'] ?? true;
+
+        $hasher = $this->createHasher($config['hasher']);
+
+        return new DatabaseUserProvider($table, $idKey, $passwordKey, $forceValidatePassword, $hasher);
+    }
+
+    /**
+     * 创建hasher
+     *
+     * @param mixed $config 配置
+     * @return Hasher
+     */
+    private function createHasher($config)
+    {
+        $driver = $config['driver'];
+        if (substr($driver, 0, 1) === '\\') {
+            $className = $driver;
+        } else {
+            $driver = ucfirst($driver);
+            $className = "\\Lzpeng\\Aut\\Hasher\\{$driver}Hasher";
+        }
+
+        unset($config['driver']);
+
+        return $this->container->make($className, $config);
     }
 }

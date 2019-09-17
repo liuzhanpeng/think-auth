@@ -1,15 +1,14 @@
 <?php
 namespace Lzpeng\Auth\Authenticators;
 
-use Lzpeng\Auth\Contracts\Authenticator;
 use Lzpeng\Auth\Contracts\UserProvider;
-use Lzpeng\Auth\Contracts\UserIdentity;
 use Lzpeng\Auth\AbstractAuthenticator;
 use think\Session;
 use think\Hook;
 
 /**
- * 基于session的用户认证器
+ * 基于think\Session的用户认证器
+ * 继承AbstractAuthenticator, 支持添加事件行为
  * 
  * @author 刘展鹏 <liuzhanpeng@gmail.com>
  */
@@ -20,53 +19,36 @@ class SessionAuthenticator extends AbstractAuthenticator
      * 
      * @var string
      */
-    private $sessionKey;
+    protected $sessionKey;
 
     /**
      * session对象
      * 
      * @var think\Session
      */
-    private $session;
+    protected $session;
 
     /**
      * 构造函数
      * 
+     * @param string $name 认证器名称
      * @param string $sessionKey 会话key
      * @param think\Session thinkphp的Session对象
+     * @param UserProvider $provider 用户认证对象提供器
      * @param think\Hook thinkphp的钩子对象
-     * @param UserProvider $provider 认证用户提供器
      * @return void
      */
     public function __construct(
+        string $name, 
         string $sessionKey = 'UserIdentity', 
         Session $session, 
-        Hook $hook, 
-        UserProvider $provider)
-    {
+        UserProvider $provider, 
+        Hook $hook
+    ) {
         $this->sessionKey = $sessionKey;
         $this->session = $session;
 
-        parent::__construct($provider, $hook);
-    }
-
-    /**
-     * @inheritDoc
-     */ 
-    protected function validate(UserIdentity $user, array $credentials)
-    {
-        return $this->provider->validateCredentials($user, $credentials);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function forceLogin(UserIdentity $user)
-    {
-        $this->session->set($this->sessionKey, $user->getId());
-        $this->user = $user;
-
-        return [];
+        parent::__construct($name, $provider, $hook);
     }
 
     /**
@@ -94,11 +76,9 @@ class SessionAuthenticator extends AbstractAuthenticator
             return $this->user;
         }
 
-        if ($this->session->has($this->sessionKey)) {
-            $id = $this->session->get($this->sessionKey);
-            $user = $this->provider->findById($id);
-
-            return $user;
+        $id = $this->getId();
+        if (!is_null($id)) {
+            return $this->provider->findById($id);
         }
 
         return null;
@@ -107,17 +87,16 @@ class SessionAuthenticator extends AbstractAuthenticator
     /**
      * @inheritDoc
      */
-    public function setUser(UserIdentity $user)
+    public function persistUser(UserIdentity $user)
     {
-        $this->user = $user;
+        $this->session->set($this->sessionKey, $user->getId());
     }
 
     /**
      * @inheritDoc
      */
-    public function logout()
+    public function cleanUser()
     {
         $this->session->delete($this->sessionKey);
-        $this->user = null;
     }
 }
