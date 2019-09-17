@@ -33,7 +33,7 @@ composer require lzpeng/think-auth=1.1.*
 
 在项目应用或模块的config目录下创建auth.php配置文件
 
-```
+```php
 return [
     'default' => 'test1',                                   // 默认使用的认证器标识
 
@@ -90,7 +90,7 @@ return [
 
 用户凭证登录:
 
-```
+```php
 use Lzpeng\Auth\Auth;
 use Lzpeng\Auth\Exceptions\AuthenticationException;
 
@@ -107,7 +107,7 @@ try {
 
 判断当前用户是否已登录:
 
-```
+```php
 if (Auth::isLogined()) {
     // 用户已认证登录
 }
@@ -115,26 +115,26 @@ if (Auth::isLogined()) {
 
 获取当前用户标识
 
-```
+```php
 $id = Auth::getId();     // 如果未认证登录将返回null
 ```
 
 获取当前用户对象：
 
-```
+```php
 $user = Auth::getUser();    // 如果未认证登录将返回null
 ```
 
 用户登出:
 
-```
+```php
 Auth::logout(); 
 ```
 
 多认证器使用:
 用于单一模块有多个用户系统的时候
 
-```
+```php
 Auth::make('test1')->login(['username' => 'xxx', 'password' = 'xxx']);
 Auth::make('test2')->login(['admin' => 'xxx', 'password' => 'xxxx]);
 
@@ -145,5 +145,7 @@ $admin = Auth::make('test2')->getUser();
 ## 扩展
 
 通过实现Lzpeng\Auth\Contracts\Authenticator接口可以实现自定义认证器
+
 通过实现Lzpeng\Auth\Contracts\UserProvider接口可以实现自定义用户提供器
+
 通过实现Lzpeng\Auth\Contracts\UserIdentity接口可以实现自定义用户对象
