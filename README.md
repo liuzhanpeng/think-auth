@@ -105,6 +105,18 @@ try {
 }
 ```
 
+跳过认证，直接设置认证用户
+
+```php
+try {
+    $user = fromOtherSystem($id);
+    $result = Auth::setUser($user);
+    // 认证成功处理逻辑
+} catch (AuthenticationException $ex) {
+    // 异常处理
+}
+```
+
 判断当前用户是否已登录:
 
 ```php

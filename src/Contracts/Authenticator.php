@@ -1,6 +1,7 @@
 <?php
 namespace Lzpeng\Auth\Contracts;
 
+use Lzpeng\Auth\Contracts\UserIdentity;
 use Lzpeng\Auth\Exceptions\AuthenticationException;
 
 /**
@@ -42,6 +43,15 @@ interface Authenticator
      * @return UserIdentity | null
      */
     public function getUser();
+
+    /**
+     * 跳过认证，直接设置认证用户
+     *
+     * @param UserIdentity $user
+     * @return mixed
+     * @throws AuthenticationException
+     */
+    public function setUser(UserIdentity $user);
 
     /**
      * 登出

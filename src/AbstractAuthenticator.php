@@ -111,6 +111,30 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
     }
 
     /**
+     * @inheritDoc
+     */
+    public function setUser(UserIdentity $user)
+    {
+        try {
+            $result = $this->persistUser($user);
+
+            $this->listen(self::EVENT_LOGIN_SUCCESS, [
+                'user' => $user,
+                'result' => $result,
+            ]);
+
+            return $result;
+        } catch (AuthenticationException $exception) {
+            $this->listen(self::EVENT_LOGIN_FAILED, [
+                'credentials' => $credentials,
+                'exception' => $exception,
+            ]);
+
+            throw $exception;
+        }
+    }
+
+    /**
      * 用户认证对象持久化逻辑
      *
      * @param UserIdentity $user
