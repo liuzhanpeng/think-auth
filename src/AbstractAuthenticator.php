@@ -82,7 +82,7 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
                 throw new AuthenticationException('认证失败', 401);
             }
         } catch (AuthenticationException $exception) {
-            $this->listen(self::EVENT_LOGIN_FAILED, [
+            $this->listen(self::EVENT_LOGIN_FAIL, [
                 'credentials' => $credentials,
                 'exception' => $exception,
             ]);
@@ -125,7 +125,7 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
 
             return $result;
         } catch (AuthenticationException $exception) {
-            $this->listen(self::EVENT_LOGIN_FAILED, [
+            $this->listen(self::EVENT_LOGIN_FAIL, [
                 'credentials' => $credentials,
                 'exception' => $exception,
             ]);
@@ -155,13 +155,12 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
         throw new \Exception('未实现方法');
     }
 
-
     /**
      * @inheritDoc
      */
     public function attachBehavior(string $event, $behavior)
     {
-        $events = [self::EVENT_LOGIN_FAILED, self::EVENT_LOGIN_SUCCESS, self::EVENT_LOGIN_FAILED, self::EVENT_LOGOUT_BEFORE, self::EVENT_LOGOUT_AFTER];
+        $events = [self::EVENT_LOGIN_BEFORE, self::EVENT_LOGIN_SUCCESS, self::EVENT_LOGIN_FAIL, self::EVENT_LOGOUT_BEFORE, self::EVENT_LOGOUT_AFTER];
         if (!in_array($event, $events)) {
             throw new \Exception(sprintf('无效认证事件[%s]', $event));
         }

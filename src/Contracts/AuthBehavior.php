@@ -21,7 +21,7 @@ interface AuthBehavior
     /**
      * 登录失败事件名称 
      */
-    const EVENT_LOGIN_FAILED = 'login_failed';
+    const EVENT_LOGIN_FAIL = 'login_fail';
 
     /**
      * 登出前事件名称
