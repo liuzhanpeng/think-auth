@@ -19,7 +19,7 @@ return [
                     'app\behaivor\checkAttempt',
                 ],
                 'login_success' => [],
-                'login_fail' => [],
+                'login_failure' => [],
                 'logout_before' => [],
                 'logout_after' => [],
             ]
