@@ -5,7 +5,6 @@ use Lzpeng\Auth\Contracts\UserProvider;
 use Lzpeng\Auth\Contracts\UserIdentity;
 use Lzpeng\Auth\Contracts\Hasher;
 use Lzpeng\Auth\Exceptions\AuthenticationException;
-use think\Model;
 
 /**
  * 基于think\Model的通用用户提供器

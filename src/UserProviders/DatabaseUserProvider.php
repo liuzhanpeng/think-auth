@@ -66,8 +66,8 @@ class DatabaseUserProvider implements UserProvider
         Hasher $hasher
     ) {
         $this->table = $table;
-        $this->idKey = $options['idKey'] ?? 'id';
-        $this->passwordKey = $options['passwordKey'] ?? 'password';
+        $this->idKey = $idKey;
+        $this->passwordKey = $passwordKey;
         $this->forceValidatePassword = $forceValidatePassword;
         $this->hasher = $hasher;
     }
