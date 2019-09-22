@@ -74,7 +74,6 @@ class AuthManager
         return $this->authenticators[$name] = $this->createAuthentiator($name);
     }
 
-
     /**
      * 注册自定义认证器创建者
      *
