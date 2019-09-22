@@ -16,8 +16,7 @@ class AuthServiceProvider extends AbstractServiceProvider
      */
     public function register()
     {
-        $container = $this->getContainer();
-        $container->bindTo(AuthManager::class, function() {
+        $this->container->bindTo(AuthManager::class, function() {
 
             return new AuthManager();
         });
