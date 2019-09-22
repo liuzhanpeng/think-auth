@@ -71,6 +71,7 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
             $user = $this->provider->findByCredentials($credentials);
             if (!is_null($user) && $this->provider->validateCredentials($user, $credentials)) {
                 $result = $this->persistUser($user);
+                $this->user = $user;
 
                 $this->listen(self::EVENT_LOGIN_SUCCESS, [
                     'user' => $user,
@@ -104,7 +105,7 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
      */
     public function logout()
     {
-        $this->listen(self::EVENT_LOGOUT_BEFORE, $this->getUesr());
+        $this->listen(self::EVENT_LOGOUT_BEFORE, $this->getUser());
         $this->cleanUser();
         $this->user = null;
         $this->listen(self::EVENT_LOGOUT_AFTER);
@@ -117,6 +118,7 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
     {
         try {
             $result = $this->persistUser($user);
+            $this->user = $user;
 
             $this->listen(self::EVENT_LOGIN_SUCCESS, [
                 'user' => $user,
@@ -126,7 +128,6 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
             return $result;
         } catch (AuthenticationException $exception) {
             $this->listen(self::EVENT_LOGIN_FAILURE, [
-                'credentials' => $credentials,
                 'exception' => $exception,
             ]);
 
@@ -142,7 +143,7 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
      */ 
     protected function persistUser(UserIdentity $user)
     {
-        throw new \Exception('未实现方法');
+        throw new AuthenticationException('未实现方法');
     }
 
     /**
@@ -152,7 +153,7 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
      */
     protected function cleanUser()
     {
-        throw new \Exception('未实现方法');
+        throw new AuthenticationException('未实现方法');
     }
 
     /**
@@ -162,7 +163,7 @@ abstract class AbstractAuthenticator implements Authenticator, AuthBehavior
     {
         $events = [self::EVENT_LOGIN_BEFORE, self::EVENT_LOGIN_SUCCESS, self::EVENT_LOGIN_FAILURE, self::EVENT_LOGOUT_BEFORE, self::EVENT_LOGOUT_AFTER];
         if (!in_array($event, $events)) {
-            throw new \Exception(sprintf('无效认证事件[%s]', $event));
+            throw new AuthenticationException(sprintf('无效认证事件[%s]', $event));
         }
 
         $this->hook->add($this->getEventName($event), $behavior);
