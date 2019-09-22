@@ -1,7 +1,6 @@
 <?php
 namespace Lzpeng\Auth\Authenticators;
 
-use Lzpeng\Auth\Contracts\Authenticator;
 use Lzpeng\Auth\Contracts\UserProvider;
 use Lzpeng\Auth\Contracts\UserIdentity;
 use Lzpeng\Auth\AbstractAuthenticator;
@@ -10,88 +9,58 @@ use think\Cache;
 use think\Hook;
 
 /**
- * 基于请求头token的用户认证器
+ * 简单的api token用户认证器
+ * 内部使用think\Cache类做用户认证对象持久化, 并支持独立配置
  * 
  * @author 刘展鹏 <liuzhanpeng@gmail.com>
  */
-class ApiTokenAuthenticator extends AbstractAuthenticator
+class SimpleTokenAuthenticator extends AbstractAuthenticator
 {
     /**
      * token名称
      * 
      * @var string
      */
-    private $tokenKey;
-
-    /**
-     * 缓存时间
-     *
-     * @var int
-     */
-    private $cacheExpire;
-
-    /**
-     * 请求对象
-     * 
-     * @var think\Request
-     */
-    private $request;
+    protected $tokenKey;
 
     /**
      * 缓存
      * 
      * @var think\Cache;
      */
-    private $cache;
+    protected $cache;
+
+    /**
+     * 请求对象
+     * 
+     * @var think\Request
+     */
+    protected $request;
 
     /**
      * 构造函数
      * 
+     * @param string $name 认证器名称
      * @param string $tokenKey token名称
-     * @param int $cacheExpire 缓存时间
-     * @param think\Request $request 请求对象
      * @param think\Cache $cache 缓存
+     * @param think\Request $request 请求对象
+     * @param UserProvider $provider 用户认证对象提供器
      * @param think\Hook $hook 钩子
-     * @param UserProvider $provider 认证用户对象提供器
      * @return void
      */
     public function __construct(
-        string $tokenKey, 
-        int $cacheExpire, 
-        Request $request, 
+        string $name,
+        string $tokenKey = 'User-Token', 
         Cache $cache, 
-        Hook $hook, 
-        UserProvider $provider)
-    {
+        Request $request, 
+        UserProvider $provider,
+        Hook $hook
+    ) {
         $this->tokenKey = $tokenKey;
-        $this->cacheExpire = $cacheExpire;
-        $this->request = $request;
         $this->cache = $cache;
+        $this->request = $request;
 
-        parent::__construct($provider, $hook);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function validate(UserIdentity $user, array $credentials)
-    {
-        return true;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function forceLogin(UserIdentity $user)
-    {
-        $token = $this->generateToken();
-
-        $this->cache->set($token, $user->id, $this->cacheExpire);
-        $this->user = $user;
-
-        return [
-            'token' => $token,
-        ];
+        parent::__construct($name, $provider, $hook);
     }
 
     /**
@@ -105,7 +74,7 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
 
         $token = $this->getRequestToken();
         if (empty($token)) {
-            return;
+            return null;
         }
 
         if ($this->cache->has($token)) {
@@ -113,8 +82,8 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
         }
 
         return null;
-    }        
-        
+    }
+
     /**
      * @inheritDoc
      */
@@ -128,13 +97,12 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
         if (empty($token)) {
             return;
         }
-
-        if ($this->cache->has($token)) {
-            $id = $this->cache->get($token);
+        $id = $this->getId();
+        if (!is_null($id)) {
             $user = $this->provider->findById($id);
 
-            // 更新缓存时间
-            $this->cache->set($token, $user->id, $this->cacheExpire);
+            // 更新过期时间
+            $this->cache->set($token, $user->id);
 
             return $user;
         }
@@ -145,15 +113,19 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
     /**
      * @inheritDoc
      */
-    public function setUser(UserIdentity $user)
+    public function persistUser(UserIdentity $user)
     {
-        $this->user = $user;
+        $token = $this->generateToken();
+
+        $this->cache->set($token, $user->id);
+
+        return $token;
     }
 
     /**
      * @inheritDoc
      */
-    public function logout()
+    public function cleanUser()
     {
         $token = $this->getRequestToken();
         if (empty($token)) {
@@ -161,25 +133,26 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
         }
 
         $this->cache->rm($token);
-        $this->user = null;
     }
 
     /**
-     * 从请求查找token
+     * 从请求对象中查找token
+     * 需要不同的获取方式，可直接继承类重写此方法
      *
      * @return string|null
      */
-    private function getRequestToken()
+    protected function getRequestToken()
     {
         return $this->request->header($this->tokenKey);
     }
 
     /**
      * 生成令牌
+     * 需要不同的生成方式，可直接继承类重写此方法
      *
      * @return string
      */
-    private function generateToken()
+    protected function generateToken()
     {
         return hash_hmac('sha1', uniqid(microtime(true), true), '');
     }

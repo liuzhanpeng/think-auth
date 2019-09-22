@@ -7,12 +7,30 @@
             "email": "liuzhanpeng@gmail.com"
         }
     ],
+    "repositories": {
+        "lzpeng": {
+            "type": "path",
+            "url": "/Users/peng/Works/think-service-provider"
+        }
+    },
     "require": {
-        "topthink/framework": "v5.1.*"
+        "topthink/framework": "v5.1.*",
+        "lzpeng/think-service-provider": "dev-develop"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.5"
     },
     "autoload": {
         "psr-4": {
             "Lzpeng\\Auth\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "secure-http": false
     }
 }

@@ -1,6 +1,8 @@
 # think-auth
 
-基于thinkphp5.1的认证系统
+**1.0 版本已废弃, 请使用1.1版本**
+
+基于thinkphp5.1的用户认证系统。
 
 ## 安装
 
@@ -24,44 +26,61 @@ composer.json 添加以下内容
 然后命令行运行
 
 ```
-composer require lzpeng/think-auth=1.0.*
+composer require lzpeng/think-auth=1.1.*
 ```
 
 ## 配置
 
-项目config目录下创建auth.php配置文件
+在项目应用或模块的config目录下创建auth.php配置文件
 
-```
+```php
 return [
-    'authenticator' => [ 
-        // 内置认证器有两种: 
-        // 1. session为基于session认证器, 一般用于账号/密码登录
-        'driver' => 'session',
-        // session key
-        'sessionKey' => 'UserIdentity',
-        'provider' => [
-            // 只有一种内置用户提供器 genericModel
-            'driver' => 'genericModel',
-            // 实现UserIdentity接口的模型类
-            'model' => '\app\model\User',
-            // 密码hasher
-            'hasher' => [
-                // 内置只有default
-                'driver' => 'default',
-                // 只支持PASSWORD_DEFAULT和PASSWORD_BCRYPT
-                'algo' => PASSWORD_DEFAULT,
-            ]
+    'default' => 'test1',                                   // 默认使用的认证器标识
+
+    'authenticators' => [                                   // 可使用的认证器配置列表
+        'test1' => [                                        // 认证器标识
+            'driver' => 'session',                          // 认证器驱动; 内置支持session和simpleToken
+            'sessionKey' => 'UserIdentity',                 // 会话key
+            'provider' => [                                 // 认证所使用的用户提供器
+                'driver' => 'model',                        // 用户提供器驱动; 内置支持model和database
+                'modelClass' => 'app\common\model\User',    // 模型类; 需要实现Lzpeng\Auth\Contracts\UserIdentity接口
+                'idKey' => 'id',                            // 模型对应的用户标识属性名称; 可选; 默认为'id'
+                'passwordKey' => 'password',                // 用户凭证数组里的密码key; 可选; 默认为'password'
+                'forceValidatePassword' => true,            // 是否强制验证密码; 如果是ture但没传入密码凭证，凭证就验证失败; false的话不传密码凭证就忽略密码凭证的验证; 可选; 默认为true
+                'hasher' => [
+                    'driver' => 'bcrypt',                    // 密码hasher; 内置只支持bcrypt
+
+                    // 'driver' => '\test\HMacHasher'        // 只支持自定义driver; 需实现Lzpeng\Auth\Contracts\Hasher接口
+                    // 'algo' => 'md5',
+                    // 'salt' => 'xxxxxx',
+                ]
+            ],
+
+            // 以下是simpleToken认证器配置例子
+            // 'driver' => 'simpleToken',
+            // 'tokenKey' => 'User-Token',             // token名称
+            // 'cache' => [                            // 缓存配置; 支持thinkphp的缓存配置 可选; 不设置使用框架的cache配置;
+            //     'type'   => 'File',
+            //     'path'   => '',
+            //     'prefix' => '',
+            //     'expire' => 1200,
+            // ],
+
+            // 以下的database用户提供器配置例子
+            // 'provider' => [
+            //     'driver' => 'database',
+            //     'table' => 'user',
+            //     'passwordKey' => 'password',                // 用户凭证数组里的密码key; 可选; 默认为'password'
+            //     'forceValidatePassword' => true,            // 是否强制验证密码; 如果是ture但没传入密码凭证，凭证就验证失败; false的话不传密码凭证就忽略密码凭证的验证; 可选; 默认为true
+            //     'hasher' => [
+            //         'driver' => 'bcrypt',                    // 密码hasher; 内置只支持bcrypt
+            //     ]
+            // ]
+
         ],
 
-        // 2. apiToken为基于api token的认证器
-        'driver' => 'apiToken',
-        // http头token的名称
-        'tokenKey' => 'token',
-        // token缓存时间
-        'cacheExpire' => 1200,
-        'provider' => [
-            'driver' => 'genericModel',
-            'model' => '\app\model\User',
+        'test2' => [
+            ...
         ],
     ]
 ]
@@ -69,30 +88,71 @@ return [
 
 ## 使用例子
 
-```
+用户凭证登录:
+
+```php
 use Lzpeng\Auth\Auth;
+use Lzpeng\Auth\Exceptions\AuthenticationException;
 
-$result = Auth::Login([
-    'username' => 'test',
-    'password' => 'password',
-]);
-if (!$result->isValid()) {
-    // 登录失败
+try {
+    $result = Auth::login(['username' => 'test', 'password' => 'password']);
+    // session认证器，$result返回为null
+    // simpleToken认证器，$result返回为token, 用于返回给客户端
+
+    // 认证成功处理逻辑
+} catch (AuthenticationException $ex) {
+    // 异常处理
 }
-// 如果是apiToken认证器，可以通过 $result->token 获取内部生成的token
 ```
 
-## API
+跳过认证，直接设置认证用户
 
-Auth::login(array $credentials) : Result;   // 通过用户凭证登录
+```php
+try {
+    $user = fromOtherSystem($id);
+    $result = Auth::setUser($user);
+    // 认证成功处理逻辑
+} catch (AuthenticationException $ex) {
+    // 异常处理
+}
+```
 
-Auth::isLogined() : bool;                          // 判断当前用户是否已登录
+判断当前用户是否已登录:
 
-Auth::getUser() : UserIdentity;                            // 获取当前认证用户对象，未登录返回null
+```php
+if (Auth::isLogined()) {
+    // 用户已认证登录
+}
+```
 
-Auth::logout();                             // 当前用户登出
+获取当前用户标识
 
-Auth::setUser(UserIdentity $user);                       // 直接认证用户对象，用于实现单次登录
+```php
+$id = Auth::getId();     // 如果未认证登录将返回null
+```
+
+获取当前用户对象：
+
+```php
+$user = Auth::getUser();    // 如果未认证登录将返回null
+```
+
+用户登出:
+
+```php
+Auth::logout(); 
+```
+
+多认证器使用:
+用于单一模块有多个用户系统的时候
+
+```php
+Auth::make('test1')->login(['username' => 'xxx', 'password' = 'xxx']);
+Auth::make('test2')->login(['admin' => 'xxx', 'password' => 'xxxx]);
+
+$user = Auth::make('test1')->getUser();
+$admin = Auth::make('test2')->getUser();
+```
 
 ## 扩展
 
@@ -101,6 +161,3 @@ Auth::setUser(UserIdentity $user);                       // 直接认证用户�
 通过实现Lzpeng\Auth\Contracts\UserProvider接口可以实现自定义用户提供器
 
 通过实现Lzpeng\Auth\Contracts\UserIdentity接口可以实现自定义用户对象
-
-通过实现Lzpeng\Auth\Contracts\PasswordHasherContract接口可以实现自定义密码hasher
-
