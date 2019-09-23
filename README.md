@@ -77,6 +77,16 @@ return [
             //     ]
             // ]
 
+            'behaviors' => [                                    // 认证过程中的行为绑定; 实现了AuthBehavior接口
+                'login_before' => [
+                    'app\behaivor\checkAttempt',
+                ],
+                'login_success' => [],
+                'login_failure' => [],
+                'logout_before' => [],
+                'logout_after' => [],
+            ]
+
         ],
 
         'test2' => [
