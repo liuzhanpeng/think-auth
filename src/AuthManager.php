@@ -1,4 +1,5 @@
 <?php
+
 namespace Lzpeng\Auth;
 
 use Lzpeng\Auth\Contracts\Authenticator;
@@ -67,7 +68,7 @@ class AuthManager
         }
 
         // 如果已存在实例，直接返回
-        if (isset($this->authenticators[$name]))  {
+        if (isset($this->authenticators[$name])) {
             return $this->authenticators[$name];
         }
 
@@ -107,16 +108,16 @@ class AuthManager
     private function getAuthenticatorConfig(string $name)
     {
         $config = $this->container->make('config')->get('auth.');
-        
+
         if (is_null($config)) {
             throw new \InvalidArgumentException('找不到配置auth');
         }
 
-        if (!isset($config['authenticators'][$name])) {
+        if (!isset($config[$name])) {
             throw new \InvalidArgumentException(sprintf('认证器配置[%s]无效', $name));
         }
 
-        return $config['authenticators'][$name];
+        return $config[$name];
     }
 
     /**
@@ -169,8 +170,8 @@ class AuthManager
         $userProvider = $this->createUserProvider($config['provider']);
 
         $authenticator = new SessionAuthenticator(
-            $name, 
-            $config['sessionKey'], 
+            $name,
+            $config['sessionKey'],
             $this->container->make('session'),
             $userProvider,
             $this->container->make('hook')
@@ -194,13 +195,13 @@ class AuthManager
     {
         if (!isset($config['tokenKey'])) {
             throw new \InvalidArgumentException('找不到配置tokenKey');
-        } 
+        }
 
         $userProvider = $this->createUserProvider($config['provider']);
 
         $authenticator = new SimpleTokenAuthenticator(
-            $name, 
-            $config['tokenKey'], 
+            $name,
+            $config['tokenKey'],
             new \think\Cache($config['cache'] ?? []),
             $this->container->make('request'),
             $userProvider,
@@ -249,7 +250,7 @@ class AuthManager
 
             return $userProvider;
         }
-    
+
         switch ($driver) {
             case 'model':
                 return $this->createModelUserProvider($config);
