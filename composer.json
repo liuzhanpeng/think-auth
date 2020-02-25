@@ -1,18 +1,10 @@
 {
     "name": "lzpeng/think-auth",
     "type": "library",
-    "authors": [
-        {
-            "name": "刘展鹏",
-            "email": "liuzhanpeng@gmail.com"
-        }
-    ],
-    "repositories": [
-        {
-            "type": "git",
-            "url": "http://172.0.6.108:3000/lzpeng/think-service-provider"
-        }
-    ],
+    "authors": [{
+        "name": "刘展鹏",
+        "email": "liuzhanpeng@gmail.com"
+    }],
     "require": {
         "topthink/framework": "v5.1.*",
         "lzpeng/think-service-provider": "1.0.*"
