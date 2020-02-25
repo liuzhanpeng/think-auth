@@ -6,8 +6,7 @@
         "email": "liuzhanpeng@gmail.com"
     }],
     "require": {
-        "topthink/framework": "v5.1.*",
-        "lzpeng/think-service-provider": "1.0.*"
+        "topthink/framework": "v5.1.*"
     },
     "require-dev": {
         "phpunit/phpunit": "^7.5"
