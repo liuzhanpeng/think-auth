@@ -136,7 +136,9 @@ class AuthManager
 
         $driver = $config['driver'];
         if (isset($this->customAuthenticatorCreators[$driver])) {
-            $authenticator = $this->customAuthenticatorCreators[$driver]($this->container, $name, $config);
+            $userProvider = $this->createUserProvider($config['provider']);
+
+            $authenticator = $this->customAuthenticatorCreators[$driver]($this->container, $name, $config, $userProvider);
             if (!$authenticator instanceof Authenticator) {
                 throw new \InvalidArgumentException(sprintf('自定义认证器驱动[%s]未实现Authenticator接口', $driver));
             }
