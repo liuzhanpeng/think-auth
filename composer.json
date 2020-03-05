@@ -20,8 +20,5 @@
         "psr-4": {
             "Tests\\": "tests/"
         }
-    },
-    "config": {
-        "secure-http": false
     }
 }
